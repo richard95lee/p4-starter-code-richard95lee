@@ -26,51 +26,53 @@
     var tool = new paper.Tool();
     var path = new paper.Path();
     var uid = Date.now() % 10000;
-    // path.strokeColor = "red";
 
     // var strokeColors = ['red', 'blue', 'black'];
-    // path.strokeColor = strokeColors[uid % length];
 
-    var storkeColors = ['red', 'blue', 'black', 'green', 'purple'];
+    var storkeColors = ['#FF0000', '#002BFF', '#000000', '#00FF08', '#BD00FF'];
 
     path.strokeColor = storkeColors[Math.floor(Math.random() * 5)];
     
     var current;
     const map1 = new Map();
+
+    var bool = 0;
     map1.set(uid, path);
+    
 
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
+    if (url.includes("large")){
+      bool = 1;
+    }
 
     var socket = new WebSocket(
         'ws://' + window.location.host + '/ws/draw');
 
     tool.onMouseMove = function(event) { //http://paperjs.org/reference/tool/ path examples
         current = uid;
-        map1.get(current).add(event.point);
+        path.add(event.point)
 
-        // path.add(event.point);
         // You may need to add code here if you want to pass any other information.
-        socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + "}" );
+        // socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + "}" );
+        socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + ", \"color\" : " + JSON.stringify(path.strokeColor) + "}" );
     }
 
     socket.onmessage = function(receivedMessage) {
         var received = JSON.parse(receivedMessage.data);
         console.log("Received: " + JSON.stringify(received));
         // You will probably want to add some code here to draw more lines.
-        if (received.uid != uid) {
-            // path.add(received);
-
-            console.log('map size: ' + map1.size);
-            console.log('which uid in received?: ' + received.uid);
-            // console.log('otherXXXX: ' + map1.get(received.uid));
-            it = map1.keys();
-            console.log('which uid in map?: ' + it.next().value); // map only contains my uid & not the one i'm receiving
-            // prob means map object is not a global variable and should be sent around with/as sockets??
-
-            map1.get(uid).add(received);
+        var receivedColor = received.color.slice(1,4);
+        if (current != received.uid && bool == 1) {
+            if (map1.has(received.uid)) {
+                map1.get(received.uid).add(received);
+            } else {
+                var new_path = new paper.Path();
+                new_path.strokeColor = receivedColor;
+                map1.set(received.uid,new_path);
+                new_path.add(received);
+            }
         }
-        // console.log('receivedPointXXXXXXX: ' + receivedPoint);
     }
 
     socket.onclose = function(e) {
