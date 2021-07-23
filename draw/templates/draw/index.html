@@ -27,19 +27,14 @@
     var path = new paper.Path();
     var uid = Date.now() % 10000;
 
-    // var strokeColors = ['red', 'blue', 'black'];
-
     var storkeColors = ['#FF0000', '#002BFF', '#000000', '#00FF08', '#BD00FF'];
-
     path.strokeColor = storkeColors[Math.floor(Math.random() * 5)];
     
     var current;
     const map1 = new Map();
+    map1.set(uid, path);
 
     var bool = 0;
-    map1.set(uid, path);
-    
-
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
     if (url.includes("large")){
