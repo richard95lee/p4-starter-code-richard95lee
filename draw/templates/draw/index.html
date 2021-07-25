@@ -4,32 +4,160 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>P4 Drawing</title>
 
     <link rel="stylesheet" type="text/css" href="{% static 'draw/vendor/bootstrap/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
     <script type="text/javascript" src="{% static 'draw/vendor/jquery/jquery-3.3.1.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'draw/vendor/paper/paper-full.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'draw/vendor/jquery-ui/jquery-ui.min.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+	<script src="https://kit.fontawesome.com/2a757731e7.js" crossorigin="anonymous"></script>
 
     <style type="text/css">
+    .color_container{
+			width: 150px;
+			top: 300px;
+			right: 50px;
+			display: flex;
+			flex-wrap: wrap;
+			position: absolute;
+			background-color: #f1f1f1;
+		}
+
+
+		#color-palette {
+			width: 150px;
+			background-color: #f1f1f1;
+			display: flex;
+			flex-wrap: wrap;
+			top: 300px;
+			right: 90px;
+		}
+
+		.swatch {
+			width: 44px;
+			height: 44px;
+			-moz-border-radius: 12px;
+			-webkit-border-radius: 12px;
+			border-radius: 12px;
+			margin: 3px;
+		}
+
+		.swatch:hover{
+			width: 60px;
+			height: 60px;
+			-moz-border-radius: 12px;
+			-webkit-border-radius: 12px;
+			border-radius: 12px;
+			margin: 3px;
+		}
+
+		#myCanvas {
+			padding-left: 0;
+		    padding-right: 0;
+		    margin-left: auto;
+		    margin-right: auto;
+			margin-top: 100px;
+		    display: block;
+			border: 5px solid #555;
+		}
+
+		.basic_functions{
+			width: 800px;
+			height: 80px;
+			top:800px;
+			left: 1200px;
+			display: flex;
+			flex-wrap: wrap;
+			position: absolute;
+		}
+
+		.btn {
+			background-color: pink;
+			border: none;
+			color: white;
+			padding: 12px 16px;
+			font-size: 16px;
+			cursor: pointer;
+		}
+
+		.btn:hover {
+			background-color: RoyalBlue;
+		}
     </style>
 
 </head>
 <body>
     <!-- You may change the dimensions of this canvas -->
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
+    <div id="draggable"  class="color_container">
+			<div id="color-palette"></div>
+			<button class="color-picker "></button>
+			<button id="rotate_palette"><i class="fas fa-sync-alt"></i></button>
+		</div>
 </body>
-<script>
+<script type="text/javascript" canvas="canvas">
 
     // setting up the canvas and one paper tool
     var canvas = document.getElementById('myCanvas');
     paper.setup(canvas);
-    var tool = new paper.Tool();
+
+
     var path = new paper.Path();
     var uid = Date.now() % 10000;
+    var mandala = {
+      item: null,
+      lastClicked: null,
+      filePath: '/static/draw/images/mandala-freepik-simple.svg'
+    };
+    window.cp = {
+				history: ["#000000"], // black selected by default
+				options: [],
+				$container: $('#color-palette')
+			}
+      const commands = [];
+    var cp = {
+      history: ["#000000"], // black selected by default
+      options: [],
+      $container: $('#color-palette')
+    };
 
-    var storkeColors = ['#FF0000', '#002BFF', '#000000', '#00FF08', '#BD00FF'];
-    path.strokeColor = storkeColors[Math.floor(Math.random() * 5)];
-    
+    function createColorPalette(colors){
+
+      // create a swatch for each color
+      for (var i = colors.length - 1; i >= 0; i--) {
+        var $swatch = $("<div>").css("background-color", colors[i]).addClass("swatch");
+        $swatch.click(function(){
+          // add color to the color palette history
+            cp.history.push($(this).css("background-color"));
+        });
+        cp.$container.append($swatch);
+      }
+    }
+    function getColorsCreatePalette(){
+				cp.$container.html(" ");
+				$.getJSON('/static/draw/vendor/material/material-colors.json', function(colors){
+					var keys = Object.keys(colors);
+					for (var i = keys.length - 1; i >= 0; i--) {
+						cp.options.push(colors[keys[i]][500]);
+					}
+					createColorPalette(cp.options);
+				});
+			}
+
+      getColorsCreatePalette();
+      paper.project.importSVG(mandala.filePath, function(item) {
+        mandala.item = item._children["design-freepik"];
+          paper.project.insertLayer(0,mandala.item);
+
+
+      });
+      var tool = new paper.Tool();
+
+
     var current;
     const map1 = new Map();
     map1.set(uid, path);
@@ -45,30 +173,38 @@
     var socket = new WebSocket(
         'ws://' + window.location.host + '/ws/draw');
 
-    tool.onMouseMove = function(event) { //http://paperjs.org/reference/tool/ path examples
+    tool.onMouseDown = function(event) { //http://paperjs.org/reference/tool/ path examples
         current = uid;
-        path.add(event.point)
+        var hit = mandala.item.hitTest(event.point, { tolerance: 10, fill: true });
+        if (hit) {
+            // Color pallette keeps track of the full history of colors, though we
+            // only color in with the most-recent color.
+            hit.item.fillColor = cp.history[cp.history.length - 1];
+            commands.push(hit);
+        }
+        //path.add(event.point)
 
         // You may need to add code here if you want to pass any other information.
         // socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + "}" );
-        socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + ", \"color\" : " + JSON.stringify(path.strokeColor) + "}" );
+        socket.send("{\"x\" : " + event.point.x + ", \"y\" : " + event.point.y + ", \"uid\" : " + uid + ", \"color\" : " + JSON.stringify(hit.item.fillColor) + "}" );
     }
 
     socket.onmessage = function(receivedMessage) {
         var received = JSON.parse(receivedMessage.data);
         console.log("Received: " + JSON.stringify(received));
         // You will probably want to add some code here to draw more lines.
+
+
         var receivedColor = received.color.slice(1,4);
         if (current != received.uid && bool == 1) {
-            if (map1.has(received.uid)) {
-                map1.get(received.uid).add(received);
-            } else {
-                var new_path = new paper.Path();
-                new_path.strokeColor = receivedColor;
-                map1.set(received.uid,new_path);
-                new_path.add(received);
-            }
+          var hit = mandala.item.hitTest(received, { tolerance: 10, fill: true });
+          if (hit) {
+              // Color pallette keeps track of the full history of colors, though we
+              // only color in with the most-recent color.
+              hit.item.fillColor = receivedColor;
+          }
         }
+
     }
 
     socket.onclose = function(e) {
