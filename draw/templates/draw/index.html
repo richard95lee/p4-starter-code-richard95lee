@@ -87,11 +87,42 @@
 		.btn:hover {
 			background-color: RoyalBlue;
 		}
+
+        .blur {
+            filter: blur(3px);
+        }
+
+
+         /* splits image to left */
+        /* #myCanvas {
+            height: 100%;
+            width: 50%;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            overflow-x: hidden;
+            padding-top: 20px;
+            left: 0;
+        } */
+
+
+         /* splits image to right */
+        /* #myCanvas {
+            height: 100%;
+            width: 50%;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            overflow-x: hidden;
+            padding-top: 20px;
+            right: 0;
+        } */
     </style>
 
 </head>
 <body>
     <!-- You may change the dimensions of this canvas -->
+    <!-- <canvas id="myCanvas"></canvas> -->
     <canvas id="myCanvas" width="750px" height="750px"></canvas>
     <div id="draggable"  class="color_container">
 			<div id="color-palette"></div>
@@ -152,8 +183,6 @@
       paper.project.importSVG(mandala.filePath, function(item) {
         mandala.item = item._children["design-freepik"];
           paper.project.insertLayer(0,mandala.item);
-
-
       });
       var tool = new paper.Tool();
 
@@ -167,7 +196,21 @@
     // getting the URL (you may want to use for Exercise 3)
     var url = window.location.href;
     if (url.includes("large")){
-      bool = 1;
+        bool = 1;
+        $("#myCanvas").addClass("blur"); // blur image
+    }
+
+    if (url.includes('small1')) {
+        // console.log('left-condition')
+        // $("#myCanvas").addClass('left').width('300px');
+        // $("#myCanvas").attr('width', '300px');
+        // $("#myCanvas").prop('width', 50).prop('height', 30)
+        // $("#myCanvas").removeAttr('width').removeAttr('height').attr()
+    }
+
+    if (url.includes('small2')) {
+        // console.log('right-condition')
+        // $("#myCanvas").addClass('split right-half').width('300px');
     }
 
     var socket = new WebSocket(
@@ -197,12 +240,12 @@
 
         var receivedColor = received.color.slice(1,4);
         if (current != received.uid && bool == 1) {
-          var hit = mandala.item.hitTest(received, { tolerance: 10, fill: true });
-          if (hit) {
+            var hit = mandala.item.hitTest(received, { tolerance: 10, fill: true });
+            if (hit) {
               // Color pallette keeps track of the full history of colors, though we
               // only color in with the most-recent color.
               hit.item.fillColor = receivedColor;
-          }
+            }
         }
 
     }
