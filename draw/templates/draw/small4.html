@@ -18,45 +18,34 @@
 
     <style type="text/css">
 
-    .color_container{
-      position: absolute;
-			width: 700px;
-			top: 0px;
-			display: flex;
-			flex-wrap: wrap;
-			position: absolute;
-			background-color: #f1f1f1;
-		}
 
-    .color-palette {
-			width: 520px;
-			background-color: #FFFFFF;
+
+		.color-palette {
+      position: absolute;
+      width: 120px;
+			background-color: #f1f1f1;
 			display: flex;
 			flex-wrap: wrap;
-			top: 300px;
-			right: 90px;
-      padding-top: 200px;
-      padding-left: 300px;
+			top: 100px;
+			left: 400px;
 		}
     .color-palette1 {
-      width: 520px;
-			background-color: #FFFFFF;
+      position: absolute;
+      width: 120px;
+			background-color: #f1f1f1;
 			display: flex;
 			flex-wrap: wrap;
-			top: 0px;
-			right: 0px;
-      padding-top: 0px;
-      padding-left: 400px;
+			top: 100px;
+			left: 600px;
 		}
     .color-palette2 {
-      position:absolute;
-      width: 180px;
-			background-color: #FFFFFF;
+      position: absolute;
+      width: 120px;
+			background-color: #f1f1f1;
 			display: flex;
 			flex-wrap: wrap;
-			top: 0px;
-			left:800px;
-
+			top: 100px;
+			left: 850px;
 		}
 
 		.swatch {
@@ -200,17 +189,17 @@
 .fix{
   position: absolute;
   padding-left: 400px;
-  padding-top: 100px;
+  padding-top: 600px;
 }
 .fix1{
   position: absolute;
   padding-left: 600px;
-  padding-top: 100px;
+  padding-top: 600px;
 }
 .fix2{
   position: absolute;
   padding-left: 850px;
-  padding-top: 500px;
+  padding-top: 600px;
 }
 
 .button1:hover {
@@ -233,13 +222,11 @@
 
 			<div id="LOL" class="color-palette"></div>
       <div id="LOOL6" class="fix">
-      <button id="KOK" type="submit" class= "button button1" onclick="function1()" style="height:100px;width:70px;"/>
+        <form id = "LOOL4" action="http://127.0.0.1:8000/draw/small4">
+      <button type="submit" class= "button button1" style="height:100px;width:100px;"/>
             Help!
           </button>
-          <button id="KOK" type="submit" class= "button button1" onclick="function2()" style="height:100px;width:70px;"/>
-                More!
-              </button>
-
+          </form>
           </div>
 
 
@@ -269,18 +256,6 @@
       options: [],
       $container: $('.color-palette')
     };
-    function function1(){
-      var a = document.getElementById('LOOL3');
-      a.classList.add('whitespace3');
-
-
-    }
-    function function2(){
-      var a = document.getElementById('LOOL3');
-      a.classList.remove('whitespace3');
-
-
-    }
 
     function createColorPalette(colors){
 
@@ -306,12 +281,12 @@
 			}
 
 
+      getColorsCreatePalette();
 
       paper.project.importSVG(mandala.filePath, function(item) {
         mandala.item = item._children["design-freepik"];
           paper.project.insertLayer(0,mandala.item);
       });
-      getColorsCreatePalette();
       var tool = new paper.Tool();
 
 
